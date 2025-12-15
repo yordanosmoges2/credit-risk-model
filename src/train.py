@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from typing import Dict
 
+import joblib
 import mlflow
 import mlflow.sklearn
 import numpy as np
@@ -27,6 +28,7 @@ DATA_PATH = "data/processed/rfm_target.csv"
 TARGET_COL = "is_high_risk"
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
+MODEL_DIR = "models"
 
 
 # ----------------------------
@@ -78,24 +80,32 @@ def train_and_log(model, model_name: str, X_train, X_test, y_train, y_test):
 def main():
     mlflow.set_experiment("credit-risk-rfm")
 
+    os.makedirs(MODEL_DIR, exist_ok=True)
+
     df = load_data(DATA_PATH)
     X, y = split_features_target(df)
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
+        X,
+        y,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=y,
     )
 
-    # Scale for Logistic Regression
+    # ----------------------------
+    # Logistic Regression
+    # ----------------------------
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # 1️⃣ Logistic Regression
     log_reg = LogisticRegression(
         max_iter=1000,
         class_weight="balanced",
         random_state=RANDOM_STATE,
     )
+
     train_and_log(
         log_reg,
         "LogisticRegression",
@@ -105,13 +115,20 @@ def main():
         y_test,
     )
 
-    # 2️⃣ Random Forest
+    # ✅ SAVE MODEL + SCALER FOR API
+    joblib.dump(log_reg, f"{MODEL_DIR}/logistic_regression.pkl")
+    joblib.dump(scaler, f"{MODEL_DIR}/scaler.pkl")
+
+    # ----------------------------
+    # Random Forest
+    # ----------------------------
     rf = RandomForestClassifier(
         n_estimators=200,
         max_depth=6,
         random_state=RANDOM_STATE,
         class_weight="balanced",
     )
+
     train_and_log(
         rf,
         "RandomForest",
