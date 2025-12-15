@@ -33,4 +33,23 @@ In this project, both model types are explored and compared. The final design em
 ### Practical Implementation and Deployment Considerations
 Beyond modeling, this project demonstrates how credit risk solutions can be operationalized. The trained model is exposed through a **FastAPI-based prediction service** and containerized using **Docker**, enabling reproducible deployment across environments. This approach reflects modern credit risk systems, where models must not only be accurate and interpretable, but also **deployable, maintainable, and auditable** in production settings.
 
+---
+
+## API Deployment and Usage
+
+### Dockerized FastAPI Service
+The trained credit risk model is deployed as a REST API using **FastAPI** and containerized with **Docker**. This setup ensures consistent, reproducible deployment across environments and reflects real-world model serving practices.
+
+The following screenshots demonstrate the successful deployment and usage of the API.
+
+### Docker Container Running
+![Docker Container Running](screenshots/docker_running.png)
+
+The screenshot above shows the FastAPI application running inside a Docker container, with the service listening on port 8000.
+
+### API Documentation (Swagger UI)
+![Swagger UI](screenshots/api_docs.png)
+
+The Swagger UI provides an interactive interface for testing the `/predict` endpoint. Users can submit Recency, Frequency, and Monetary values and receive a predicted credit risk probability.
+
 
