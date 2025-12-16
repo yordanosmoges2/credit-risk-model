@@ -72,3 +72,9 @@ using a model URI. This ensures consistency between training and inference,
 supports versioned deployments, and enables auditable, production-ready
 model serving aligned with MLOps best practices.
 
+### Continuous Integration and Code Quality
+The project uses GitHub Actions for continuous integration. On every push and pull
+request, automated tests (pytest) and code quality checks (flake8) are executed.
+Pydantic request and response schemas are organized in a dedicated module to
+improve API maintainability and structure.
+
