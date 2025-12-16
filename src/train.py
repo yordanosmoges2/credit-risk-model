@@ -6,7 +6,6 @@ from typing import Dict
 import joblib
 import mlflow
 import mlflow.sklearn
-import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -17,7 +16,7 @@ from sklearn.metrics import (
     f1_score,
     roc_auc_score,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 
 
@@ -79,7 +78,6 @@ def train_and_log(model, model_name: str, X_train, X_test, y_train, y_test):
 
 def main():
     mlflow.set_experiment("credit-risk-rfm")
-
     os.makedirs(MODEL_DIR, exist_ok=True)
 
     df = load_data(DATA_PATH)
@@ -94,7 +92,7 @@ def main():
     )
 
     # ----------------------------
-    # Logistic Regression
+    # Logistic Regression (baseline)
     # ----------------------------
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
@@ -115,28 +113,46 @@ def main():
         y_test,
     )
 
-    # ✅ SAVE MODEL + SCALER FOR API
     joblib.dump(log_reg, f"{MODEL_DIR}/logistic_regression.pkl")
     joblib.dump(scaler, f"{MODEL_DIR}/scaler.pkl")
 
     # ----------------------------
-    # Random Forest
+    # Random Forest (GridSearchCV)
     # ----------------------------
+    param_grid = {
+        "n_estimators": [100, 200],
+        "max_depth": [4, 6, 8],
+    }
+
     rf = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=6,
-        random_state=RANDOM_STATE,
         class_weight="balanced",
+        random_state=RANDOM_STATE,
     )
 
-    train_and_log(
+    grid = GridSearchCV(
         rf,
-        "RandomForest",
-        X_train,
-        X_test,
-        y_train,
-        y_test,
+        param_grid,
+        scoring="roc_auc",
+        cv=3,
+        n_jobs=-1,
     )
+
+    grid.fit(X_train, y_train)
+    best_rf = grid.best_estimator_
+
+    with mlflow.start_run(run_name="RandomForest_Tuned"):
+        mlflow.log_params(grid.best_params_)
+
+        y_pred = best_rf.predict(X_test)
+        y_proba = best_rf.predict_proba(X_test)[:, 1]
+
+        metrics = evaluate(y_test, y_pred, y_proba)
+        for k, v in metrics.items():
+            mlflow.log_metric(k, v)
+
+        mlflow.sklearn.log_model(best_rf, artifact_path="model")
+
+        print("✅ RandomForest (Tuned) metrics:", metrics)
 
 
 if __name__ == "__main__":

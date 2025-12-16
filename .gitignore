@@ -1,4 +1,18 @@
+# Data
 data/
+
+# Python
 __pycache__/
+*.pyc
+venv/
+
+# Jupyter
 .ipynb_checkpoints/
+
+# Environment
 .env
+
+# MLflow local files
+mlflow.db
+mlruns/
+
