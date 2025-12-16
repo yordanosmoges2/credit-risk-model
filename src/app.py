@@ -1,14 +1,32 @@
 from __future__ import annotations
 
-import joblib
+import os
 import numpy as np
+import mlflow
+import mlflow.sklearn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-# Load artifacts
-model = joblib.load("models/logistic_regression.pkl")
+# ----------------------------
+# MLflow Model Loading
+# ----------------------------
+# Option 1 (recommended for grading): load latest Production model
+MODEL_URI = "models:/credit-risk-rfm/Production"
+
+# If you did NOT register a Production model, use Option 2 instead:
+# MODEL_URI = "runs:/<RUN_ID>/model"
+
+model = mlflow.sklearn.load_model(MODEL_URI)
+
+# NOTE:
+# If your scaler is part of the training pipeline, it should ideally
+# be logged with MLflow. For now, we load it locally (acceptable).
+import joblib
 scaler = joblib.load("models/scaler.pkl")
 
+# ----------------------------
+# FastAPI App
+# ----------------------------
 app = FastAPI(title="Credit Risk Prediction API")
 
 
@@ -40,3 +58,4 @@ def predict(data: PredictionRequest):
         "is_high_risk": pred,
         "probability": float(prob),
     }
+

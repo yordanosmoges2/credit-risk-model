@@ -52,4 +52,23 @@ The screenshot above shows the FastAPI application running inside a Docker conta
 
 The Swagger UI provides an interactive interface for testing the `/predict` endpoint. Users can submit Recency, Frequency, and Monetary values and receive a predicted credit risk probability.
 
+### Weight of Evidence (WoE) and Information Value (IV)
+To improve interpretability and align with credit risk best practices, a WoE/IV
+transformation step was implemented for selected features. This allows the model
+to capture monotonic risk relationships while remaining explainable and regulator-friendly.
+
+Basic unit tests were added and executed using pytest to validate data flow and
+model components.
+
+## Continuous Integration
+
+A Continuous Integration (CI) pipeline is implemented using **GitHub Actions**.  
+The pipeline automatically installs dependencies and runs unit tests using **pytest** on every push and pull request to the main branch, ensuring code quality and preventing regressions.
+
+### MLflow-based Model Loading
+
+The FastAPI service loads the trained credit risk model directly from MLflow
+using a model URI. This ensures consistency between training and inference,
+supports versioned deployments, and enables auditable, production-ready
+model serving aligned with MLOps best practices.
 
